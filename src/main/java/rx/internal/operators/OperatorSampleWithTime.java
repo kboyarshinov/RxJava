@@ -91,6 +91,7 @@ public final class OperatorSampleWithTime<T> implements Operator<T, T> {
 
         @Override
         public void onCompleted() {
+            call();
             subscriber.onCompleted();
             unsubscribe();
         }

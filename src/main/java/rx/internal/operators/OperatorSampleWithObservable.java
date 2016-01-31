@@ -47,12 +47,7 @@ public final class OperatorSampleWithObservable<T, U> implements Operator<T, T> 
         Subscriber<U> samplerSub = new Subscriber<U>(child) {
             @Override
             public void onNext(U t) {
-                Object localValue = value.getAndSet(EMPTY_TOKEN);
-                if (localValue != EMPTY_TOKEN) {
-                    @SuppressWarnings("unchecked")
-                    T v = (T)localValue;
-                    s.onNext(v);
-                }
+                emitIfNotEmpty(value, s);
             }
 
             @Override
@@ -83,6 +78,7 @@ public final class OperatorSampleWithObservable<T, U> implements Operator<T, T> 
 
             @Override
             public void onCompleted() {
+                emitIfNotEmpty(value, s);
                 s.onCompleted();
                 unsubscribe();
             }
@@ -91,5 +87,14 @@ public final class OperatorSampleWithObservable<T, U> implements Operator<T, T> 
         sampler.unsafeSubscribe(samplerSub);
         
         return result;
+    }
+
+    private void emitIfNotEmpty(AtomicReference<Object> value, SerializedSubscriber<T> s) {
+        Object localValue = value.getAndSet(EMPTY_TOKEN);
+        if (localValue != EMPTY_TOKEN) {
+            @SuppressWarnings("unchecked")
+            T v = (T)localValue;
+            s.onNext(v);
+        }
     }
 }
